@@ -97,7 +97,7 @@ fn handle_post_request(request: &str) -> (String, String) {
 fn handle_get_request(request: &str) -> (String, String) {
     match(get_id(&request).parse::<i32>(), Client::connect(DB_URL, NoTls)){
         (Ok(id), Ok(mut client)) => 
-            match client.query(*SELECT * FROM users WHERE id = $1, &[&id]) {
+            match client.query_one(*SELECT * FROM users WHERE id = $1, &[&id]) {
                 Ok(row) => {
                     let user = User {
                         id : row.get(0),
@@ -182,14 +182,14 @@ fn set_database() -> Result<(), PostgresError> {
     let mut client = Client::connect(DB_URL, NoTls)?;
 
     //Create table
-    client.execute(
+    client.batch_execute(
         "CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             name VARCHAR NOT NULL,
             email VARCHAR NOT NULL
         )",
-        &[]
     )?;
+    Ok(())
 }
 
 //get_id function

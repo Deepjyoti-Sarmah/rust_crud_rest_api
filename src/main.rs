@@ -16,7 +16,7 @@ struct User {
 }
 
 // Database_url
-const DB_URL: &str = !env("DATABASE_URL");
+const DB_URL: &str = env!("DATABASE_URL");
 
 // constants
 const OK_RESPONSE: &str = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n";
@@ -59,12 +59,12 @@ fn handle_clinet(mut stream: TcpStream) {
             request.push_str(String::from_utf8_lossy(&buffer[..size]).as_ref());
 
             let (status_line, content) = match &*request {
-                r if request_with("POST /users") => handle_post_request(r),
-                r if request_with("GET /users/") => handle_get_request(r),
-                r if request_with("GET /users") => handle_get_all_request(r),
-                r if request_with("PUT /users/") => handle_put_request(r),
-                r if request_with("DELETE /users/") => handle_delete_request(r),
-                _ => (NOT_FOUND, "Not Found".to_string()),
+                r if r.starts_with("POST /users") => handle_post_request(r),
+                r if r.starts_with("GET /users/") => handle_get_request(r),
+                r if r.starts_with("GET /users") => handle_get_all_request(r),
+                r if r.starts_with("PUT /users/") => handle_put_request(r),
+                r if r.starts_with("DELETE /users/") => handle_delete_request(r),
+                _ => (NOT_FOUND.to_string(), "404 Not Found".to_string()),
             };
 
             stream.write_all(format!("{}{}", status_line, content).as_bytes()).unwrap();
@@ -95,7 +95,7 @@ fn handle_post_request(request: &str) -> (String, String) {
 
 //handle_get_request function
 fn handle_get_request(request: &str) -> (String, String) {
-    match(get_id(&request).parse::<i32>, Client::connect(DB_URL, NoTls)){
+    match(get_id(&request).parse::<i32>(), Client::connect(DB_URL, NoTls)){
         (Ok(id), Ok(mut client)) => 
             match client.query(*SELECT * FROM users WHERE id = $1, &[&id]) {
                 Ok(row) => {
@@ -138,7 +138,7 @@ fn handle_get_all_request(request: &str) -> (String, String) {
 fn handle_put_request(request: &str) -> (String, String) {
     match
         {
-            get_id(&request).parse::<i32>,
+            get_id(&request).parse::<i32>(),
             get_user_request_body(&request),
             Client::connect(DB_URL, NoTls),
         }
@@ -158,7 +158,7 @@ fn handle_put_request(request: &str) -> (String, String) {
 
 //handle_delete_request function
 fn handle_delete_request(request: &str) -> (String, String) {
-    match(get_id(&request).parse::<i32>, Client::connect(DB_URL, NoTls)){
+    match(get_id(&request).parse::<i32>(), Client::connect(DB_URL, NoTls)){
         (Ok(id), Ok(client)) => {
             let rows_affected = client
                 .execute(

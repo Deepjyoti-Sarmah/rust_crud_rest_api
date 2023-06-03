@@ -4,7 +4,7 @@ services:
   rustapp:
     container_name: rustapp
     image: deepjyotisarmah37/rustapp:1.0.0
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
       args:
@@ -21,9 +21,9 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      -'5432:5432'
+      - '5432:5432'
     volumes:
-      -pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
 
 volumes:
   pgdata: {}
